@@ -175,6 +175,46 @@ namespace Citrix.Doti.Service.Helper
                 + stopWatch.Elapsed, "Citrix.Doti.Service", "CacheHelper." + methodName);
             return true;
         }
+        
+                public Tres result<Tres>(object data,string key,TimeSpan duration, Func<Tres>function, bool serializeWithType = false)
+        {
+            //Tres val = Functionman(data);
+            //return val;
+            Tres response = default(Tres);
+            var stopWatch = new System.Diagnostics.Stopwatch();
+            try
+            {
+                logger.Log("Key: " + key + " AddToCache Start Time: " + DateTime.Now, "Citrix.Doti.Service", "CacheHelper.AddToCache");
+                stopWatch.Start();
+                response = function();
+                stopWatch.Stop();
+                logger.Log("Key: " + key + " AddToCache Completed Successfully or Unsuccessfully. Check for any errors after Start. Time Elapsed: "
+                    + stopWatch.Elapsed, "Citrix.Doti.Service", "CacheHelper.AddToCache");
+                return response;
+            }
+            catch (Exception ex)
+            {
+                stopWatch.Stop();
+                logger.Log("Key: " + key + " Add To Cache FAILED! Time Elapsed: " + stopWatch.Elapsed + " Excepton: " + ex.ToString(), "Citrix.Doti.Service", "CacheHelper.AddToCache");
+                return response;
+            }
+        }
+        public bool AddToCache(object data, string key, bool serializeWithType = false)
+        {
+            return result<bool>(data, key, null, () => {
+                
+                var cacheResponse = cache.Add(data, key, serializeWithType);
+                return cacheResponse;
+            }, serializeWithType);
+        }
+        public bool AddToCache(object data, string key, TimeSpan duration, bool serializeWithType = false)
+        {
+            return result<bool>(data,key, duration, ()=> {
+                bool res = true;
+                var cacheResponse = cache.Add(data, key, duration, ExpirationType.AbsoluteTime, serializeWithType);
+                return res;
+            }, serializeWithType);
+        }
 
         #endregion
 
